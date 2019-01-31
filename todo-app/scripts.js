@@ -1,7 +1,7 @@
 // Modle
 class TodoClass {
   constructor() {
-    this.tasks = [
+    this.todos = [
       { task: "Go to Dentist", isComplete: false },
       { task: "Do Gardening", isComplete: true },
       { task: "Renew Library Account", isComplete: false },
@@ -10,11 +10,15 @@ class TodoClass {
   }
 
   getAllTodos() {
-    return this.tasks;
+    return this.todos;
   }
 
   updateTodo(index) {
-    this.tasks[index].isComplete = !this.tasks[index].isComplete;
+    this.todos[index].isComplete = !this.todos[index].isComplete;
+  }
+
+  addTodo(todo) {
+    this.todos.push(todo);
   }
 }
 
@@ -25,57 +29,69 @@ class UI {
     this.inputElement = document.getElementById("todo-input");
     this.todoListDiv = document.getElementById("todo-list");
     this.checkBoxElement = document.querySelector(".todo-checkbox");
-    this.addElement.addEventListener("click", () => {
-      let textInput = this.inputElement.value;
-      controller.addNewTodo(textInput);
-    });
   }
 
   renderView(todos) {
     console.log("tods", todos);
+   
+    // remove existing content in div
     this.todoListDiv.innerHTML = "";
     for (let i = 0; i < todos.length; i++) {
       let string = this.createNoteHTML(todos[i], i);
       this.todoListDiv.insertAdjacentHTML("beforeend", string);
     }
+   
   }
 
-  createNoteHTML(task, index) {
+  createNoteHTML(todo, index) {
+    let strikeStyle = todo.isComplete === true ? `strike` : "";
     return `<div class="todo-row">
-            <input type="checkbox" name="" onchange="controller.toggleTodoStatus(${index})" class="todo-checkbox" ${task.isComplete === true ? "checked" : ""}>
-            <p class="todo-text">${task.task}</p>
+            <input type="checkbox" id=${index} class="todo-checkbox" ${todo.isComplete === true ? "checked" : ""}>
+            <p class="todo-text ${strikeStyle}" >${todo.task}</p>
             <i class="icon-delete fas fa-trash-alt"></i>
         </div>`;
   }
 }
 
 class Controller {
-  constructor(model, view) {
-    this.model = model;
-    this.view = view;
-    this.init();
+  constructor(modelController, viewController) {
+    this.model = modelController;
+    this.view = viewController;
   }
 
   init() {
     let allTodos = model.getAllTodos();
-    console.log("all", allTodos);
+    // add event listener to the add button
+    this.view.addElement.addEventListener("click", () => {
+      let textInput = view.inputElement.value;
+      if (textInput) {
+        this.addNewTodo(textInput);
+      }
+    });
+    // add event listener to the checkboxes using bubbling concept
+    this.view.todoListDiv.addEventListener("click", e => {
+      if (e.target.type === "checkbox") {
+        this.toggleTodoStatus(e.target.id);
+      }
+    });
     this.view.renderView(allTodos);
   }
 
   toggleTodoStatus(index) {
-    this.model.tasks[index].isComplete = !this.model.tasks[index].isComplete;
-    this.view.renderView(this.model.tasks);
+    this.model.todos[index].isComplete = !this.model.todos[index].isComplete;
+    this.view.renderView(this.model.todos);
   }
 
   addNewTodo(todoText) {
-    let newTask = {
+    let todo = {
       task: todoText,
       isComplete: false
     };
-    model.tasks.push(newTask);
-    this.view.renderView(model.tasks);
+    this.model.todos.push(todo);
+    this.view.renderView(model.todos);
   }
 }
 let model = new TodoClass();
 let view = new UI();
 let controller = new Controller(model, view);
+controller.init();
