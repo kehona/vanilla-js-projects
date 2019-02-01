@@ -20,6 +20,12 @@ class TodoClass {
   addTodo(todo) {
     this.todos.push(todo);
   }
+
+  removeTodo(index) {
+    let todos = this.todos;
+    let removed = todos.splice(index, 1);
+    this.todos = todos;
+  }
 }
 
 // view
@@ -45,10 +51,13 @@ class UI {
 
   createNoteHTML(todo, index) {
     let strikeStyle = todo.isComplete === true ? `strike` : "";
-    return `<div class="todo-row">
-            <input type="checkbox" id=${index} class="todo-checkbox" ${todo.isComplete === true ? "checked" : ""}>
+    return `<div class="todo-row" id=${index}>
+            <input type="checkbox" class="todo-checkbox" ${todo.isComplete === true ? "checked" : ""}>
             <p class="todo-text ${strikeStyle}" >${todo.task}</p>
-            <i class="icon-delete fas fa-trash-alt"></i>
+            <div class="delete">
+               <i class="fas fa-trash-alt"></i>
+            </div>
+            
         </div>`;
   }
 }
@@ -71,10 +80,16 @@ class Controller {
     // add event listener to the checkboxes using bubbling concept
     this.view.todoListDiv.addEventListener("click", e => {
       if (e.target.type === "checkbox") {
-        this.toggleTodoStatus(e.target.id);
+        let id = e.target.parentElement.id;
+        this.toggleTodoStatus(id);
+      }
+      // add event listener to delete icon
+      if (e.target.parentElement.className ==="delete") {
+        let id = e.target.parentElement.parentElement.id;
+        this.deleteTodo(id);
       }
     });
-    this.view.renderView(allTodos);
+    this.view.renderView(this.model.getAllTodos());
   }
 
   toggleTodoStatus(index) {
@@ -89,6 +104,10 @@ class Controller {
     };
     this.model.todos.push(todo);
     this.view.renderView(model.todos);
+  }
+  deleteTodo(index) {
+    this.model.removeTodo(index);
+    this.view.renderView(this.model.getAllTodos());
   }
 }
 let model = new TodoClass();
